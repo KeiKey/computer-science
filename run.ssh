@@ -1,0 +1,2 @@
+sudo docker build -t scientific-python .
+sudo docker run -d --name scientific-python -p 8888:8888 scientific-python
