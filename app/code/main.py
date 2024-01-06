@@ -29,7 +29,6 @@ df = pd.read_csv(data_loc)
 grouped = df.groupby('Country/Region')
 df2 = grouped.sum()
 
-
 def make_plot(country):
     """Make different plots for case numbers, cumulative cases, and mortality rate."""
 
