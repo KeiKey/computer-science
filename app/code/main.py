@@ -2,88 +2,101 @@ import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.ticker import MaxNLocator
 
-# If you have saved a local copy of the CSV file as LOCAL_CSV_FILE,
-# set READ_FROM_URL to True
-READ_FROM_URL = True
-LOCAL_CSV_FILE = 'covid-19-cases.csv'
-
-# Start the plot on the day when the number of confirmed cases reaches MIN_CASES.
-MIN_CASES = 100
+CONFIRMED_CASES_FILE = "time_series_covid19_confirmed_global.csv"
+DEATH_CASES_FILE = "time_series_covid19_deaths_global.csv"
+RECOVERED_CASES_FILE = "time_series_covid19_recovered_global.csv"
 
 # The country to plot the data for.
 country = 'Germany'
 
-# This is the GitHub URL for the Johns Hopkins data in CSV format
-data_loc = ('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/'
-            'csse_covid_19_data/csse_covid_19_time_series'
-            '/time_series_covid19_confirmed_global.csv')
-
 # Read in the data to a pandas DataFrame.
-if not READ_FROM_URL:
-    data_loc = LOCAL_CSV_FILE
-df = pd.read_csv(data_loc)
+data_frame = pd.read_csv(CONFIRMED_CASES_FILE)
 
 # Group by country and sum over the different states/regions of each country.
-grouped = df.groupby('Country/Region')
-df2 = grouped.sum()
+grouped_by_country = data_frame.groupby('Country/Region')
+data_frame_by_country = grouped_by_country.sum()
+
 
 def make_plot(country):
     """Make different plots for case numbers, cumulative cases, and mortality rate."""
 
     # Extract the Series corresponding to the case numbers for the country.
-    c_df = df2.loc[country, df2.columns[3:]]
-    print(c_df)
-    # Discard any columns with fewer than MIN_CASES.
-    c_df = c_df[c_df >= MIN_CASES].astype(int)
-    # Convert the index to a proper datetime object.
-    c_df.index = pd.to_datetime(c_df.index)
-    n = len(c_df)
+    cases_by_location = data_frame_by_country.loc[country, data_frame_by_country.columns[3:]]
+    # Convert the index to a proper datetime object with a flexible format.
+    cases_by_location.index = pd.to_datetime(cases_by_location.index, errors='coerce')
+    n = len(cases_by_location)
     if n == 0:
-        print('Too few data to plot: minimum number of cases is {}'
-              .format(MIN_CASES))
+        print('Too few data to plot.')
         sys.exit(1)
 
     # Merge deaths and cumulative cases dataframes based on the common date index.
-    deaths_df = df.groupby('Country/Region').sum().loc[country, df.columns[3:]]
-    combined_df = pd.merge(c_df, deaths_df, left_index=True, right_index=True, suffixes=('_confirmed', '_deaths'))
+    deaths_by_location = data_frame.groupby('Country/Region').sum().loc[country, data_frame.columns[3:]]
+    deaths_by_location.index = pd.to_datetime(deaths_by_location.index, errors='coerce')  # Updated line
+    combined_df = pd.merge(cases_by_location, deaths_by_location, left_index=True, right_index=True,
+                           suffixes=('_confirmed', '_deaths'))
 
     # Print column names for debugging.
     print("Column names in combined_df:", combined_df.columns)
 
-    fig, axs = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
+    fig, axs = plt.subplots(3, 2, figsize=(15, 12), sharex=True)
 
-    # Plot 1: Total confirmed cases.
-    axs[0].plot(c_df.index, c_df.values, label='Total Confirmed Cases', color='blue')
-    axs[0].set_ylabel('Confirmed cases, $N$')
-    axs[0].legend()
+    # Plot 1: Daily confirmed cases.
+    axs[0, 0].bar(cases_by_location.index, cases_by_location.diff().fillna(0).values, label='New Daily Confirmed Cases', color='purple')
+    axs[0, 0].set_ylabel('New Daily Confirmed Cases')
+    axs[0, 0].legend()
 
-    # Plot 2: Cumulative cases.
-    cumulative_cases = c_df.cumsum()
-    axs[1].plot(c_df.index, cumulative_cases.values, label='Cumulative Cases', color='green')
-    axs[1].set_ylabel('Cumulative Cases, $N$')
-    axs[1].legend()
+    # Plot 2: Total confirmed cases.
+    axs[0, 1].plot(cases_by_location.index, cases_by_location.values, label='Total Confirmed Cases', color='blue')
+    axs[0, 1].set_ylabel('Confirmed cases, $N$')
+    axs[0, 1].legend()
+    axs[0, 1].ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
 
-    # Plot 3: Mortality rate.
-    mortality_rate = np.zeros_like(c_df, dtype=float)
-    non_zero_cumulative_cases = cumulative_cases[cumulative_cases > 0]
-    if not non_zero_cumulative_cases.empty:
-        mortality_rate[cumulative_cases > 0] = (
-                combined_df[country + '_deaths'] / non_zero_cumulative_cases * 100
-        )  # Calculate mortality rate (%)
+    # Plot 3: Daily deaths.
+    new_daily_deaths = deaths_by_location.diff().fillna(0)
+    axs[1, 0].bar(deaths_by_location.index, new_daily_deaths.values, label='New Daily Deaths', color='purple')
+    axs[1, 0].set_ylabel('New Daily Deaths')
+    axs[1, 0].legend()
 
-    # Replace NaN values (resulting from dividing by zero) with zero.
-    mortality_rate = np.nan_to_num(mortality_rate)
+    # Plot 4: Total deaths.
+    axs[1, 1].plot(deaths_by_location.index, deaths_by_location.values, label='Total Deaths', color='orange')
+    axs[1, 1].set_xlabel('Date')
+    axs[1, 1].set_ylabel('Total Deaths')
+    axs[1, 1].legend()
+    axs[1, 1].ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
 
-    axs[2].plot(c_df.index, mortality_rate, label='Mortality Rate', color='red')
-    axs[2].set_xlabel('Date')
-    axs[2].set_ylabel('Mortality Rate (%)')
-    axs[2].legend()
+    # Plot 5: Daily recoveries.
+    recovered_data_frame = pd.read_csv(RECOVERED_CASES_FILE)
+    recovered_by_location = recovered_data_frame.groupby('Country/Region').sum().loc[country, recovered_data_frame.columns[3:]]
+    recovered_by_location.index = pd.to_datetime(recovered_by_location.index, errors='coerce')  # Updated line
+    new_daily_recoveries = recovered_by_location.diff().fillna(0)
+    axs[2, 0].bar(recovered_by_location.index, new_daily_recoveries.values, label='New Daily Recoveries', color='green')
+    axs[2, 0].set_xlabel('Date')
+    axs[2, 0].set_ylabel('New Daily Recoveries')
+    axs[2, 0].legend()
+
+    # Plot 6: Total recoveries.
+    axs[2, 1].plot(recovered_by_location.index, recovered_by_location.values, label='Total Recoveries', color='cyan')
+    axs[2, 1].set_xlabel('Date')
+    axs[2, 1].set_ylabel('Total Recoveries')
+    axs[2, 1].legend()
+    axs[2, 1].ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
+
+    # Set major locator for the x-axis to be every 6 months.
+    axs[0, 0].xaxis.set_major_locator(plt.MultipleLocator(180))
+    axs[0, 1].xaxis.set_major_locator(plt.MultipleLocator(180))
+    axs[1, 0].xaxis.set_major_locator(plt.MultipleLocator(180))
+    axs[1, 1].xaxis.set_major_locator(plt.MultipleLocator(180))
+    axs[2, 0].xaxis.set_major_locator(plt.MultipleLocator(180))
+    axs[2, 1].xaxis.set_major_locator(plt.MultipleLocator(180))
+
+    # Change the format of the x-axis labels to display month and year.
+    for ax in axs.flat:
+        ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: pd.to_datetime(x).strftime('%m/%y')))
 
     # Add a title reporting the latest number of cases available.
-    title = '{}\n{} cases on {}'.format(country, c_df[-1],
-                                        c_df.index[-1].strftime('%d %B %Y'))
+    title = '{}\n{} cases on {}'.format(country, cases_by_location[-1],
+                                        cases_by_location.index[-1].strftime('%d %B %Y'))
     plt.suptitle(title)
 
     # Save the plot as an image file.
