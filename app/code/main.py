@@ -9,21 +9,42 @@ RECOVERED_CASES_FILE = "time_series_covid19_recovered_global.csv"
 # The country to plot the data for.
 country = 'Germany'
 
-# Read in the data to a pandas DataFrame.
-cases_data = pd.read_csv(CONFIRMED_CASES_FILE)
-deaths_data = pd.read_csv(DEATH_CASES_FILE)
-recoveries_data = pd.read_csv(RECOVERED_CASES_FILE)
 
-# Group by country and sum over the different states/regions of each country.
-grouped_by_country = cases_data.groupby('Country/Region')
-data_frame_by_country = grouped_by_country.sum()
+def get_data_for_country(country):
+    # Read in the data to a pandas DataFrame.
+    cases_data = pd.read_csv(CONFIRMED_CASES_FILE)
+    deaths_data = pd.read_csv(DEATH_CASES_FILE)
+    recovered_data = pd.read_csv(RECOVERED_CASES_FILE)
+
+    # Group by country and sum over the different states/regions of each country.
+    cases_grouped_by_country = cases_data.groupby('Country/Region')
+    cases_data_frame_by_country = cases_grouped_by_country.sum()
+
+    # Extract the Series corresponding to the case numbers for the country.
+    cases_by_location = cases_data_frame_by_country.loc[country, cases_data_frame_by_country.columns[3:]]
+
+    # Group by country and sum over the different states/regions of each country.
+    deaths_grouped_by_country = deaths_data.groupby('Country/Region')
+    deaths_data_frame_by_country = deaths_grouped_by_country.sum()
+
+    # Extract the Series corresponding to the case numbers for the country.
+    deaths_by_location = deaths_data_frame_by_country.loc[country, deaths_data_frame_by_country.columns[3:]]
+
+    # Group by country and sum over the different states/regions of each country.
+    recovered_grouped_by_country = recovered_data.groupby('Country/Region')
+    recovered_data_frame_by_country = recovered_grouped_by_country.sum()
+
+    # Extract the Series corresponding to the case numbers for the country.
+    recovered_by_location = recovered_data_frame_by_country.loc[country, recovered_data_frame_by_country.columns[3:]]
+
+    return cases_by_location, deaths_by_location, recovered_by_location
 
 
 def make_plot(country):
     """Make different plots for case numbers, cumulative cases, and mortality rate."""
 
-    # Extract the Series corresponding to the case numbers for the country.
-    cases_by_location = data_frame_by_country.loc[country, data_frame_by_country.columns[3:]]
+    cases_by_location, deaths_by_location, recovered_by_location = get_data_for_country(country)
+
     # Convert the index to a proper datetime object with a flexible format.
     cases_by_location.index = pd.to_datetime(cases_by_location.index, errors='coerce')
     n = len(cases_by_location)
@@ -32,7 +53,6 @@ def make_plot(country):
         sys.exit(1)
 
     # Merge deaths and cumulative cases dataframes based on the common date index.
-    deaths_by_location = deaths_data.groupby('Country/Region').sum().loc[country, deaths_data.columns[3:]]
     deaths_by_location.index = pd.to_datetime(deaths_by_location.index, errors='coerce')  # Updated line
     combined_df = pd.merge(cases_by_location, deaths_by_location, left_index=True, right_index=True,
                            suffixes=('_confirmed', '_deaths'))
@@ -43,7 +63,8 @@ def make_plot(country):
     fig, axs = plt.subplots(3, 2, figsize=(15, 12), sharex=True)
 
     # Plot 1: Daily confirmed cases.
-    axs[0, 0].bar(cases_by_location.index, cases_by_location.diff().fillna(0).values, label='Daily Confirmed Cases', color='purple')
+    axs[0, 0].bar(cases_by_location.index, cases_by_location.diff().fillna(0).values, label='Daily Confirmed Cases',
+                  color='purple')
     axs[0, 0].set_ylabel('Daily Confirmed Cases')
     axs[0, 0].legend()
 
@@ -66,8 +87,7 @@ def make_plot(country):
     axs[1, 1].legend()
     axs[1, 1].ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
 
-    # Plot 5: Daily recoveries.
-    recovered_by_location = recoveries_data.groupby('Country/Region').sum().loc[country, recoveries_data.columns[3:]]
+    # Plot 5: Daily recovered.
     recovered_by_location.index = pd.to_datetime(recovered_by_location.index, errors='coerce')  # Updated line
     new_daily_recoveries = recovered_by_location.diff().fillna(0)
     axs[2, 0].bar(recovered_by_location.index, new_daily_recoveries.values, label='Daily Recoveries', color='green')
