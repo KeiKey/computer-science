@@ -40,7 +40,53 @@ def get_data_for_country(country):
     return cases_by_location, deaths_by_location, recovered_by_location
 
 
-def make_plot(country):
+def make_confirmed_cases_plots(axs, cases_by_location):
+    # Plot 1: Daily confirmed cases.
+    axs[0, 0].bar(cases_by_location.index, cases_by_location.diff().fillna(0).values, label='Daily Confirmed Cases',
+                  color='purple')
+    axs[0, 0].set_ylabel('Daily Confirmed Cases')
+    axs[0, 0].legend()
+
+    # Plot 2: Total confirmed cases.
+    axs[0, 1].plot(cases_by_location.index, cases_by_location.values, label='Total Confirmed Cases', color='blue')
+    axs[0, 1].set_ylabel('Confirmed cases, $N$')
+    axs[0, 1].legend()
+    axs[0, 1].ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
+
+
+def make_deaths_plots(axs, deaths_by_location):
+    # Plot 3: Daily deaths.
+    new_daily_deaths = deaths_by_location.diff().fillna(0)
+    axs[1, 0].bar(deaths_by_location.index, new_daily_deaths.values, label='Daily Deaths', color='purple')
+    axs[1, 0].set_ylabel('Daily Deaths')
+    axs[1, 0].legend()
+
+    # Plot 4: Total deaths.
+    axs[1, 1].plot(deaths_by_location.index, deaths_by_location.values, label='Total Deaths', color='orange')
+    axs[1, 1].set_xlabel('Date')
+    axs[1, 1].set_ylabel('Total Deaths')
+    axs[1, 1].legend()
+    axs[1, 1].ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
+
+
+def make_recovered_plots(axs, recovered_by_location):
+    # Plot 5: Daily recovered.
+    recovered_by_location.index = pd.to_datetime(recovered_by_location.index, errors='coerce')  # Updated line
+    new_daily_recoveries = recovered_by_location.diff().fillna(0)
+    axs[2, 0].bar(recovered_by_location.index, new_daily_recoveries.values, label='Daily Recoveries', color='green')
+    axs[2, 0].set_xlabel('Date')
+    axs[2, 0].set_ylabel('Daily Recoveries')
+    axs[2, 0].legend()
+
+    # Plot 6: Total recoveries.
+    axs[2, 1].plot(recovered_by_location.index, recovered_by_location.values, label='Total Recoveries', color='cyan')
+    axs[2, 1].set_xlabel('Date')
+    axs[2, 1].set_ylabel('Total Recoveries')
+    axs[2, 1].legend()
+    axs[2, 1].ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
+
+
+def make_plots(country):
     """Make different plots for case numbers, cumulative cases, and mortality rate."""
 
     cases_by_location, deaths_by_location, recovered_by_location = get_data_for_country(country)
@@ -62,45 +108,11 @@ def make_plot(country):
 
     fig, axs = plt.subplots(3, 2, figsize=(15, 12), sharex=True)
 
-    # Plot 1: Daily confirmed cases.
-    axs[0, 0].bar(cases_by_location.index, cases_by_location.diff().fillna(0).values, label='Daily Confirmed Cases',
-                  color='purple')
-    axs[0, 0].set_ylabel('Daily Confirmed Cases')
-    axs[0, 0].legend()
+    make_confirmed_cases_plots(axs, cases_by_location)
 
-    # Plot 2: Total confirmed cases.
-    axs[0, 1].plot(cases_by_location.index, cases_by_location.values, label='Total Confirmed Cases', color='blue')
-    axs[0, 1].set_ylabel('Confirmed cases, $N$')
-    axs[0, 1].legend()
-    axs[0, 1].ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
+    make_deaths_plots(axs, cases_by_location)
 
-    # Plot 3: Daily deaths.
-    new_daily_deaths = deaths_by_location.diff().fillna(0)
-    axs[1, 0].bar(deaths_by_location.index, new_daily_deaths.values, label='Daily Deaths', color='purple')
-    axs[1, 0].set_ylabel('Daily Deaths')
-    axs[1, 0].legend()
-
-    # Plot 4: Total deaths.
-    axs[1, 1].plot(deaths_by_location.index, deaths_by_location.values, label='Total Deaths', color='orange')
-    axs[1, 1].set_xlabel('Date')
-    axs[1, 1].set_ylabel('Total Deaths')
-    axs[1, 1].legend()
-    axs[1, 1].ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
-
-    # Plot 5: Daily recovered.
-    recovered_by_location.index = pd.to_datetime(recovered_by_location.index, errors='coerce')  # Updated line
-    new_daily_recoveries = recovered_by_location.diff().fillna(0)
-    axs[2, 0].bar(recovered_by_location.index, new_daily_recoveries.values, label='Daily Recoveries', color='green')
-    axs[2, 0].set_xlabel('Date')
-    axs[2, 0].set_ylabel('Daily Recoveries')
-    axs[2, 0].legend()
-
-    # Plot 6: Total recoveries.
-    axs[2, 1].plot(recovered_by_location.index, recovered_by_location.values, label='Total Recoveries', color='cyan')
-    axs[2, 1].set_xlabel('Date')
-    axs[2, 1].set_ylabel('Total Recoveries')
-    axs[2, 1].legend()
-    axs[2, 1].ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
+    make_recovered_plots(axs, recovered_by_location)
 
     # Set major locator for the x-axis to be every 6 months.
     axs[0, 0].xaxis.set_major_locator(plt.MultipleLocator(180))
@@ -128,4 +140,4 @@ def make_plot(country):
 
 
 # Call the function to generate the plot.
-make_plot(country)
+make_plots(country)
