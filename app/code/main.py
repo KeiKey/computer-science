@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 CONFIRMED_CASES_FILE = "time_series_covid19_confirmed_global.csv"
-DEATH_CASES_FILE = "time_series_covid19_deaths_global.csv"
-RECOVERED_CASES_FILE = "time_series_covid19_recovered_global.csv"
+DEATHS_FILE = "time_series_covid19_deaths_global.csv"
+RECOVERIES_FILE = "time_series_covid19_recovered_global.csv"
 DATE_FORMAT = '%m/%d/%y'
 
 
@@ -24,37 +24,34 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def get_data_for_country(country):
+def get_data_for_country(country: str) -> tuple:
     # Read in the data to a pandas DataFrame.
     cases_data = pd.read_csv(CONFIRMED_CASES_FILE)
-    deaths_data = pd.read_csv(DEATH_CASES_FILE)
-    recovered_data = pd.read_csv(RECOVERED_CASES_FILE)
+    deaths_data = pd.read_csv(DEATHS_FILE)
+    recoveries_data = pd.read_csv(RECOVERIES_FILE)
 
     # Group by country and sum over the different states/regions of each country.
     cases_grouped_by_country = cases_data.groupby('Country/Region')
     cases_data_frame_by_country = cases_grouped_by_country.sum()
-
     # Extract the Series corresponding to the case numbers for the country.
     cases_by_location = cases_data_frame_by_country.loc[country, cases_data_frame_by_country.columns[3:]]
 
     # Group by country and sum over the different states/regions of each country.
     deaths_grouped_by_country = deaths_data.groupby('Country/Region')
     deaths_data_frame_by_country = deaths_grouped_by_country.sum()
-
     # Extract the Series corresponding to the case numbers for the country.
     deaths_by_location = deaths_data_frame_by_country.loc[country, deaths_data_frame_by_country.columns[3:]]
 
     # Group by country and sum over the different states/regions of each country.
-    recovered_grouped_by_country = recovered_data.groupby('Country/Region')
-    recovered_data_frame_by_country = recovered_grouped_by_country.sum()
-
+    recoveries_grouped_by_country = recoveries_data.groupby('Country/Region')
+    recoveries_data_frame_by_country = recoveries_grouped_by_country.sum()
     # Extract the Series corresponding to the case numbers for the country.
-    recovered_by_location = recovered_data_frame_by_country.loc[country, recovered_data_frame_by_country.columns[3:]]
+    recoveries_by_location = recoveries_data_frame_by_country.loc[country, recoveries_data_frame_by_country.columns[3:550]]
 
-    return cases_by_location, deaths_by_location, recovered_by_location
+    return cases_by_location, deaths_by_location, recoveries_by_location
 
 
-def make_confirmed_cases_plots(daily_confirmed_cases_plot, total_confirmed_cases_plot, cases_by_location):
+def make_confirmed_cases_plots(daily_confirmed_cases_plot, total_confirmed_cases_plot, cases_by_location) -> None:
     print('Generating subplots for confirmed cases.')
 
     # Plot 1: Daily confirmed cases.
@@ -77,8 +74,9 @@ def make_confirmed_cases_plots(daily_confirmed_cases_plot, total_confirmed_cases
     total_confirmed_cases_plot.xaxis.set_major_locator(plt.MultipleLocator(180))
 
 
-def make_deaths_plots(daily_deaths_plot, total_deaths_plot, deaths_by_location):
+def make_deaths_plots(daily_deaths_plot, total_deaths_plot, deaths_by_location) -> None:
     print('Generating subplots for deaths cases.')
+
     # Plot 3: Daily deaths.
     deaths_by_location.index = pd.to_datetime(deaths_by_location.index, format=DATE_FORMAT, errors='coerce')
     new_daily_deaths = deaths_by_location.diff().fillna(0)
@@ -100,51 +98,60 @@ def make_deaths_plots(daily_deaths_plot, total_deaths_plot, deaths_by_location):
     total_deaths_plot.xaxis.set_major_locator(plt.MultipleLocator(180))
 
 
-def make_recovered_plots(daily_recovered_plot, total_recovered_plot, recovered_by_location):
-    print('Generating subplots for recovered cases.')
+def make_recoveries_plots(daily_recoveries_plot, total_recoveries_plot, recoveries_by_location) -> None:
+    print('Generating subplots for recoveries cases.')
 
-    # Plot 5: Daily recovered.
-    recovered_by_location.index = pd.to_datetime(recovered_by_location.index, format=DATE_FORMAT, errors='coerce')
-    new_daily_recoveries = recovered_by_location.diff().fillna(0)
+    # Plot 5: Daily recoveries.
+    recoveries_by_location.index = pd.to_datetime(recoveries_by_location.index, format=DATE_FORMAT, errors='coerce')
+    new_daily_recoveries = recoveries_by_location.diff().fillna(0)
 
-    daily_recovered_plot.bar(recovered_by_location.index, new_daily_recoveries.values, label='Daily Recoveries', color='green')
-    daily_recovered_plot.set_xlabel('Date')
-    daily_recovered_plot.set_ylabel('Daily Recoveries')
-    daily_recovered_plot.legend()
-    daily_recovered_plot.ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
+    daily_recoveries_plot.bar(recoveries_by_location.index, new_daily_recoveries.values, label='Daily Recoveries', color='green')
+    daily_recoveries_plot.set_xlabel('Date')
+    daily_recoveries_plot.set_ylabel('Daily Recoveries')
+    daily_recoveries_plot.legend()
+    daily_recoveries_plot.ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
 
     # Plot 6: Total recoveries.
-    total_recovered_plot.plot(recovered_by_location.index, recovered_by_location.values, label='Total Recoveries', color='cyan')
-    total_recovered_plot.set_xlabel('Date')
-    total_recovered_plot.set_ylabel('Total Recoveries')
-    total_recovered_plot.legend()
-    total_recovered_plot.ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
+    total_recoveries_plot.plot(recoveries_by_location.index, recoveries_by_location.values, label='Total Recoveries', color='cyan')
+    total_recoveries_plot.set_xlabel('Date')
+    total_recoveries_plot.set_ylabel('Total Recoveries')
+    total_recoveries_plot.legend()
+    total_recoveries_plot.ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
 
     # Set major locator for the x-axis to be every 6 months.
-    daily_recovered_plot.xaxis.set_major_locator(plt.MultipleLocator(180))
-    total_recovered_plot.xaxis.set_major_locator(plt.MultipleLocator(180))
+    daily_recoveries_plot.xaxis.set_major_locator(plt.MultipleLocator(180))
+    total_recoveries_plot.xaxis.set_major_locator(plt.MultipleLocator(180))
 
 
-def generate_plot(country, confirmed_cases, deaths, recoveries):
+def generate_plot(country: str, confirmed_cases: bool, deaths: bool, recoveries: bool) -> None:
     print(f'Generating plot for {country}')
 
-    count_of_plots_needed = sum((confirmed_cases, deaths, recoveries))
+    count_of_subplots_needed = sum((confirmed_cases, deaths, recoveries))
     current_plots_row = 0
 
-    fig, axs = plt.subplots(count_of_plots_needed, 2, figsize=(15, 12), sharex=True)
+    fig, axs = plt.subplots(count_of_subplots_needed, 2, figsize=(15, 12), sharex=True)
 
-    cases_by_location, deaths_by_location, recovered_by_location = get_data_for_country(country)
+    cases_by_location, deaths_by_location, recoveries_by_location = get_data_for_country(country)
 
     if confirmed_cases:
-        make_confirmed_cases_plots(axs[current_plots_row, 0], axs[current_plots_row, 1], cases_by_location)
+        daily_cases_subplot = axs[0] if count_of_subplots_needed == 1 else axs[current_plots_row, 0]
+        total_cases_subplot = axs[1] if count_of_subplots_needed == 1 else axs[current_plots_row, 1]
+
+        make_confirmed_cases_plots(daily_cases_subplot, total_cases_subplot, cases_by_location)
         current_plots_row += 1
 
     if deaths:
-        make_deaths_plots(axs[current_plots_row, 0], axs[current_plots_row, 1], deaths_by_location)
+        daily_deaths_subplot = axs[0] if count_of_subplots_needed == 1 else axs[current_plots_row, 0]
+        total_deaths_subplot = axs[1] if count_of_subplots_needed == 1 else axs[current_plots_row, 1]
+
+        make_deaths_plots(daily_deaths_subplot, total_deaths_subplot, deaths_by_location)
         current_plots_row += 1
 
     if recoveries:
-        make_recovered_plots(axs[current_plots_row, 0], axs[current_plots_row, 1], recovered_by_location)
+        daily_recoveries_subplot = axs[0] if count_of_subplots_needed == 1 else axs[current_plots_row, 0]
+        total_recoveries_subplot = axs[1] if count_of_subplots_needed == 1 else axs[current_plots_row, 1]
+
+        make_recoveries_plots(daily_recoveries_subplot, total_recoveries_subplot, recoveries_by_location)
 
     # Change the format of the x-axis labels to display month and year.
     for ax in axs.flat:
@@ -156,8 +163,8 @@ def generate_plot(country, confirmed_cases, deaths, recoveries):
     plt.suptitle('title')
 
 
-def store_plot_to_storage(country, confirmed_cases, deaths, recoveries):
-    # Create the images directory if it doesn't exist
+def store_plot_to_storage(country: str, confirmed_cases: bool, deaths: bool, recoveries: bool) -> None:
+    # Create the image's directory if it doesn't exist
     images_dir = '/app/images'
     os.makedirs(images_dir, exist_ok=True)
 
@@ -184,7 +191,7 @@ def store_plot_to_storage(country, confirmed_cases, deaths, recoveries):
 if __name__ == "__main__":
     args = parse_arguments()
 
-    # if no flag is passed it means that we want all the plots.
+    # if no flag is passed it means that we want all the subplots.
     if not args.c and not args.d and not args.r:
         args.c = args.d = args.r = True
 
