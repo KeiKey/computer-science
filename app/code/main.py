@@ -5,9 +5,7 @@ import matplotlib.pyplot as plt
 CONFIRMED_CASES_FILE = "time_series_covid19_confirmed_global.csv"
 DEATH_CASES_FILE = "time_series_covid19_deaths_global.csv"
 RECOVERED_CASES_FILE = "time_series_covid19_recovered_global.csv"
-
-# The country to plot the data for.
-country = 'Germany'
+DATE_FORMAT = '%m/%d/%y'
 
 
 def get_data_for_country(country):
@@ -71,7 +69,7 @@ def make_deaths_plots(axs, deaths_by_location):
 
 def make_recovered_plots(axs, recovered_by_location):
     # Plot 5: Daily recovered.
-    recovered_by_location.index = pd.to_datetime(recovered_by_location.index, errors='coerce')  # Updated line
+    recovered_by_location.index = pd.to_datetime(recovered_by_location.index, format=DATE_FORMAT, errors='coerce')
     new_daily_recoveries = recovered_by_location.diff().fillna(0)
     axs[2, 0].bar(recovered_by_location.index, new_daily_recoveries.values, label='Daily Recoveries', color='green')
     axs[2, 0].set_xlabel('Date')
@@ -92,19 +90,21 @@ def make_plots(country):
     cases_by_location, deaths_by_location, recovered_by_location = get_data_for_country(country)
 
     # Convert the index to a proper datetime object with a flexible format.
-    cases_by_location.index = pd.to_datetime(cases_by_location.index, errors='coerce')
+    cases_by_location.index = pd.to_datetime(cases_by_location.index, format=DATE_FORMAT, errors='coerce')
+
     n = len(cases_by_location)
     if n == 0:
         print('Too few data to plot.')
         sys.exit(1)
 
     # Merge deaths and cumulative cases dataframes based on the common date index.
-    deaths_by_location.index = pd.to_datetime(deaths_by_location.index, errors='coerce')  # Updated line
+    deaths_by_location.index = pd.to_datetime(deaths_by_location.index, format=DATE_FORMAT, errors='coerce')
+
     combined_df = pd.merge(cases_by_location, deaths_by_location, left_index=True, right_index=True,
                            suffixes=('_confirmed', '_deaths'))
 
     # Print column names for debugging.
-    print("Column names in combined_df:", combined_df.columns)
+    # print("Column names in combined_df:", combined_df.columns)
 
     fig, axs = plt.subplots(3, 2, figsize=(15, 12), sharex=True)
 
@@ -127,8 +127,9 @@ def make_plots(country):
         ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: pd.to_datetime(x).strftime('%m/%y')))
 
     # Add a title reporting the latest number of cases available.
-    title = '{}\n{} cases on {}'.format(country, cases_by_location[-1],
+    title = '{}\n{} cases on {}'.format(country, cases_by_location.iloc[-1],
                                         cases_by_location.index[-1].strftime('%d %B %Y'))
+
     plt.suptitle(title)
 
     # Save the plot as an image file.
@@ -139,5 +140,15 @@ def make_plots(country):
     print(f"Plot saved to: {image_path}")
 
 
-# Call the function to generate the plot.
-make_plots(country)
+if __name__ == "__main__":
+    country = 'Germany'
+    make_plots(country)
+
+    # The first element in sys.argv is the script name itself.
+    script_name = sys.argv[0]
+
+    # The rest of the elements are the arguments passed to the script.
+    arguments = sys.argv[1:]
+
+    print(f"Script Name: {script_name}")
+    print(f"Arguments: {arguments}")
