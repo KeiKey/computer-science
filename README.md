@@ -1,8 +1,18 @@
-# Project Name
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis of the Impact of COVID-19</title>
+</head>
+<body>
 
-## Project Structure
+<h1>Analysis of the Impact of COVID-19</h1>
 
-<pre>project-root
+<h2>Project Structure</h2>
+
+<pre>
+project-root
 │
 ├── .gitignore
 ├── README.md
@@ -15,54 +25,71 @@
         ├── main.py
         ├── time_series_covid19_confirmed_global.csv
         ├── time_series_covid19_deaths_global.csv
-        └── time_series_covid19_recovered_global.csv
+        ├── time_series_covid19_recovered_global.csv
+        └── images
 </pre>
 
-## Setup Instructions
+<h2>Setup Instructions</h2>
 
-### Prerequisites
-
-*   [Docker](https://docs.docker.com/get-docker/)
-*   [Docker Compose](https://docs.docker.com/compose/install/)
-*   Python 3.9
-
-### Steps
-
-1.  Clone the repository:
+<h3>1. Clone the Repository</h3>
 
 <pre>
-git clone repository-url
-cd repository-directory/app
+git clone https://github.com/KeiKey/covid19-plotting.git
+cd covid19-plotting
 </pre>
 
-1.  Run the setup script to build the Docker image and start the container:
+<h3>2.a Local Machine Setup</h3>
+
+<h4>Prerequisites:</h4>
+- Python
+- Dependencies from requirements.txt
 
 <pre>
+pip install -r app/requirements.txt
+python app/main.py
+</pre>
+
+<h3>2.b Docker Setup</h3>
+
+<h4>Prerequisites:</h4>
+- Docker
+- Docker Compose
+
+<pre>
+cd app
 bash run.sh
 </pre>
 
-This script does the following:
+After the above commands finish, you'll be inside the Docker container. Run the script like this:
 
-*   Removes any existing containers.
-*   Builds the Docker image using the Dockerfile.
-*   Runs the Docker container in detached mode.
-*   Starts an interactive session inside the container.
-
-1.  Once the container is running, execute the main Python script:
-
-<pre>python3 main.py
+<pre>
+python3 main.py
 </pre>
 
-This script generates and saves plots based on the COVID-19 data for a specified country.
+<h2>Usage</h2>
 
-1.  Find the generated plot at `/app/plot.png`.
+<p>The script <code>main.py</code> allows you to generate and save COVID-19 plots. Here are some usage examples:</p>
 
-## Additional Information
+<pre>
+python3 main.py
 
-*   The `docker-compose.yml` file sets up the Docker service for running the Python application with X11 support.
-*   The `Dockerfile` installs necessary dependencies and copies the Python code and data into the container.
-*   The `requirements.txt` file lists the Python packages required for the project.
-*   The `run.sh` script automates the setup process by handling Docker container creation and image building.
-*   The `code` directory contains the main Python script (`main.py`) and COVID-19 data files.
+python3 main.py -c
 
-Feel free to modify the code and adapt the instructions based on your specific needs.
+python3 main.py --countries France,Italy
+
+python3 main.py --countries Albania -dr
+</pre>
+
+<p>- Use <code>--countries</code> to specify a comma-separated list of countries. If it's missing then by default Germany is taken.</p>
+<p>- Use <code>-c</code>, <code>-d</code>, or <code>-r</code> flags to include Confirmed Cases, Deaths, or Recoveries plots, respectively.</p>
+
+<p>For more options and details, run:</p>
+
+<pre>
+python3 main.py --help
+</pre>
+
+<p>Generated plots will be saved in the <code>images</code> folder.</p>
+
+</body>
+</html>
