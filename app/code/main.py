@@ -88,7 +88,6 @@ def make_deaths_plots(daily_deaths_plot, total_deaths_plot, deaths_by_location) 
 
     # Plot 4: Total deaths.
     total_deaths_plot.plot(deaths_by_location.index, deaths_by_location.values, label='Total Deaths', color='orange')
-    total_deaths_plot.set_xlabel('Date')
     total_deaths_plot.set_ylabel('Total Deaths')
     total_deaths_plot.legend()
     total_deaths_plot.ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
@@ -106,14 +105,12 @@ def make_recoveries_plots(daily_recoveries_plot, total_recoveries_plot, recoveri
     new_daily_recoveries = recoveries_by_location.diff().fillna(0)
 
     daily_recoveries_plot.bar(recoveries_by_location.index, new_daily_recoveries.values, label='Daily Recoveries', color='green')
-    daily_recoveries_plot.set_xlabel('Date')
     daily_recoveries_plot.set_ylabel('Daily Recoveries')
     daily_recoveries_plot.legend()
     daily_recoveries_plot.ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
 
     # Plot 6: Total recoveries.
     total_recoveries_plot.plot(recoveries_by_location.index, recoveries_by_location.values, label='Total Recoveries', color='cyan')
-    total_recoveries_plot.set_xlabel('Date')
     total_recoveries_plot.set_ylabel('Total Recoveries')
     total_recoveries_plot.legend()
     total_recoveries_plot.ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
@@ -153,9 +150,9 @@ def generate_plot(country: str, confirmed_cases: bool, deaths: bool, recoveries:
 
         make_recoveries_plots(daily_recoveries_subplot, total_recoveries_subplot, recoveries_by_location)
 
-    # Change the format of the x-axis labels to display month and year.
+    # Rotate x-axis labels for better visibility.
     for ax in axs.flat:
-        ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: pd.to_datetime(x).strftime('%m/%y')))
+        ax.tick_params(axis='x', rotation=45)
 
     # Add a title reporting the latest number of cases available. todo
     # title = '{}\n{} cases on {}'.format(country, cases_by_location.iloc[-1], cases_by_location.index[-1].strftime('%d %B %Y'))
