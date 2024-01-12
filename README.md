@@ -5,19 +5,18 @@
 <pre>
     project-root
     │
+    └── app
+        ├── main.py
+        ├── time_series_covid19_confirmed_global.csv
+        ├── time_series_covid19_deaths_global.csv
+        ├── time_series_covid19_recovered_global.csv
+        └── images
     ├── .gitignore
     ├── README.md
-    └── app
-        ├── docker-compose.yml
-        ├── Dockerfile
-        ├── requirements.txt
-        ├── run.sh
-        └── code
-            ├── main.py
-            ├── time_series_covid19_confirmed_global.csv
-            ├── time_series_covid19_deaths_global.csv
-            ├── time_series_covid19_recovered_global.csv
-            └── images
+    ├── docker-compose.yml
+    ├── Dockerfile
+    ├── requirements.txt
+    └── run.sh
 </pre>
 
 ## Setup Instructions
@@ -37,8 +36,8 @@
 - Dependencies from requirements.txt
 
 <pre>
-    pip install -r app/requirements.txt
-    python app/main.py
+    pip install -r requirements.txt
+    python3 main.py
 </pre>
 
 ### 2.b Docker Setup
@@ -49,7 +48,6 @@
 - Docker Compose
 
 <pre>
-    cd app
     bash run.sh
 </pre>
 

@@ -1,0 +1,11 @@
+version: '3'
+services:
+    scientific-python:
+        build:
+            context: .
+        environment:
+            - DISPLAY=:0.0
+        network_mode: host
+        volumes:
+            - $HOME/.Xauthority:/root/.Xauthority
+            - ./app:/app
