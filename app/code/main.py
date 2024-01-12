@@ -1,6 +1,8 @@
 import argparse
 import os
 import matplotlib.pyplot as plt
+import matplotlib.axes as axes
+import pandas.core.series as series
 import pandas as pd
 
 CONFIRMED_CASES_FILE = "time_series_covid19_confirmed_global.csv"
@@ -9,7 +11,7 @@ RECOVERIES_FILE = "time_series_covid19_recovered_global.csv"
 DATE_FORMAT = '%m/%d/%y'
 
 
-def parse_arguments():
+def parse_arguments() -> argparse:
     parser = argparse.ArgumentParser(description='Generate and save COVID-19 plots.')
 
     # Add optional argument --countries
@@ -25,6 +27,7 @@ def parse_arguments():
 
 
 def get_data_for_country(country: str) -> tuple:
+    print('Getting the data for the subplots.')
     # Read in the data to a pandas DataFrame.
     cases_data = pd.read_csv(CONFIRMED_CASES_FILE)
     deaths_data = pd.read_csv(DEATHS_FILE)
@@ -51,14 +54,14 @@ def get_data_for_country(country: str) -> tuple:
     return cases_by_location, deaths_by_location, recoveries_by_location
 
 
-def make_confirmed_cases_plots(daily_confirmed_cases_plot, total_confirmed_cases_plot, cases_by_location) -> None:
+def make_confirmed_cases_subplots(daily_confirmed_cases_plot: axes, total_confirmed_cases_plot: axes, cases_by_location: series) -> None:
     print('Generating subplots for confirmed cases.')
 
     # Plot 1: Daily confirmed cases.
     cases_by_location.index = pd.to_datetime(cases_by_location.index, format=DATE_FORMAT, errors='coerce')
-    new_daily_confirmed_cases = cases_by_location.diff().fillna(0)
+    new_daily_confirmed_cases = cases_by_location.diff().fillna(0).clip(lower=0)  # Set negative values to zero
 
-    daily_confirmed_cases_plot.bar(cases_by_location.index, new_daily_confirmed_cases.values, label='Daily Confirmed Cases',color='purple')
+    daily_confirmed_cases_plot.bar(cases_by_location.index, new_daily_confirmed_cases.values, label='Daily Confirmed Cases', color='purple')
     daily_confirmed_cases_plot.set_ylabel('Daily Confirmed Cases')
     daily_confirmed_cases_plot.legend()
     daily_confirmed_cases_plot.ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
@@ -74,12 +77,12 @@ def make_confirmed_cases_plots(daily_confirmed_cases_plot, total_confirmed_cases
     total_confirmed_cases_plot.xaxis.set_major_locator(plt.MultipleLocator(180))
 
 
-def make_deaths_plots(daily_deaths_plot, total_deaths_plot, deaths_by_location) -> None:
+def make_deaths_subplots(daily_deaths_plot: axes, total_deaths_plot: axes, deaths_by_location: series) -> None:
     print('Generating subplots for deaths cases.')
 
     # Plot 3: Daily deaths.
     deaths_by_location.index = pd.to_datetime(deaths_by_location.index, format=DATE_FORMAT, errors='coerce')
-    new_daily_deaths = deaths_by_location.diff().fillna(0)
+    new_daily_deaths = deaths_by_location.diff().fillna(0).clip(lower=0)  # Set negative values to zero
 
     daily_deaths_plot.bar(deaths_by_location.index, new_daily_deaths.values, label='Daily Deaths', color='purple')
     daily_deaths_plot.set_ylabel('Daily Deaths')
@@ -97,12 +100,12 @@ def make_deaths_plots(daily_deaths_plot, total_deaths_plot, deaths_by_location) 
     total_deaths_plot.xaxis.set_major_locator(plt.MultipleLocator(180))
 
 
-def make_recoveries_plots(daily_recoveries_plot, total_recoveries_plot, recoveries_by_location) -> None:
+def make_recoveries_subplots(daily_recoveries_plot: axes, total_recoveries_plot: axes, recoveries_by_location: series) -> None:
     print('Generating subplots for recoveries cases.')
 
     # Plot 5: Daily recoveries.
     recoveries_by_location.index = pd.to_datetime(recoveries_by_location.index, format=DATE_FORMAT, errors='coerce')
-    new_daily_recoveries = recoveries_by_location.diff().fillna(0)
+    new_daily_recoveries = recoveries_by_location.diff().fillna(0).clip(lower=0)  # Set negative values to zero
 
     daily_recoveries_plot.bar(recoveries_by_location.index, new_daily_recoveries.values, label='Daily Recoveries', color='green')
     daily_recoveries_plot.set_ylabel('Daily Recoveries')
@@ -124,40 +127,40 @@ def generate_plot(country: str, confirmed_cases: bool, deaths: bool, recoveries:
     print(f'Generating plot for {country}')
 
     count_of_subplots_needed = sum((confirmed_cases, deaths, recoveries))
-    current_plots_row = 0
+    current_subplots_row = 0
 
     fig, axs = plt.subplots(count_of_subplots_needed, 2, figsize=(15, 12), sharex=True)
 
     cases_by_location, deaths_by_location, recoveries_by_location = get_data_for_country(country)
 
     if confirmed_cases:
-        daily_cases_subplot = axs[0] if count_of_subplots_needed == 1 else axs[current_plots_row, 0]
-        total_cases_subplot = axs[1] if count_of_subplots_needed == 1 else axs[current_plots_row, 1]
+        daily_cases_subplot = axs[0] if count_of_subplots_needed == 1 else axs[current_subplots_row, 0]
+        total_cases_subplot = axs[1] if count_of_subplots_needed == 1 else axs[current_subplots_row, 1]
 
-        make_confirmed_cases_plots(daily_cases_subplot, total_cases_subplot, cases_by_location)
-        current_plots_row += 1
+        make_confirmed_cases_subplots(daily_cases_subplot, total_cases_subplot, cases_by_location)
+        current_subplots_row += 1
 
     if deaths:
-        daily_deaths_subplot = axs[0] if count_of_subplots_needed == 1 else axs[current_plots_row, 0]
-        total_deaths_subplot = axs[1] if count_of_subplots_needed == 1 else axs[current_plots_row, 1]
+        daily_deaths_subplot = axs[0] if count_of_subplots_needed == 1 else axs[current_subplots_row, 0]
+        total_deaths_subplot = axs[1] if count_of_subplots_needed == 1 else axs[current_subplots_row, 1]
 
-        make_deaths_plots(daily_deaths_subplot, total_deaths_subplot, deaths_by_location)
-        current_plots_row += 1
+        make_deaths_subplots(daily_deaths_subplot, total_deaths_subplot, deaths_by_location)
+        current_subplots_row += 1
 
     if recoveries:
-        daily_recoveries_subplot = axs[0] if count_of_subplots_needed == 1 else axs[current_plots_row, 0]
-        total_recoveries_subplot = axs[1] if count_of_subplots_needed == 1 else axs[current_plots_row, 1]
+        daily_recoveries_subplot = axs[0] if count_of_subplots_needed == 1 else axs[current_subplots_row, 0]
+        total_recoveries_subplot = axs[1] if count_of_subplots_needed == 1 else axs[current_subplots_row, 1]
 
-        make_recoveries_plots(daily_recoveries_subplot, total_recoveries_subplot, recoveries_by_location)
+        make_recoveries_subplots(daily_recoveries_subplot, total_recoveries_subplot, recoveries_by_location)
 
     # Rotate x-axis labels for better visibility.
     for ax in axs.flat:
         ax.tick_params(axis='x', rotation=45)
 
-    # Add a title reporting the latest number of cases available. todo
-    # title = '{}\n{} cases on {}'.format(country, cases_by_location.iloc[-1], cases_by_location.index[-1].strftime('%d %B %Y'))
+    # Add a title reporting the latest number of cases available.
+    title = f"Analysis of the Impact of COVID-19 in {country}"
 
-    plt.suptitle('title')
+    plt.suptitle(title)
 
 
 def store_plot_to_storage(country: str, confirmed_cases: bool, deaths: bool, recoveries: bool) -> None:
