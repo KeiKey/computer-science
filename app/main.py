@@ -60,8 +60,7 @@ def get_data_for_country(country: str) -> tuple:
     return cases_by_location, deaths_by_location, recoveries_by_location
 
 
-def make_confirmed_cases_subplots(daily_confirmed_cases_plot: axes, total_confirmed_cases_plot: axes,
-                                  cases_by_location: series) -> None:
+def make_confirmed_cases_subplots(daily_confirmed_cases_plot: axes, total_confirmed_cases_plot: axes, cases_by_location: series) -> None:
     print('Generating subplots for confirmed cases.')
 
     # Plot 1: Daily confirmed cases.

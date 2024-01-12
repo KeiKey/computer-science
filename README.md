@@ -61,13 +61,14 @@ After the above commands finish, you'll be inside the Docker container. Run the 
 
 The script `main.py` allows you to generate and save COVID-19 plots. Here are some usage examples:
 
-<pre>python3 main.py
-
-python3 main.py -c
-
-python3 main.py --countries France,Italy
-
-python3 main.py --countries Albania -dr
+<pre>
+    python3 main.py
+    
+    python3 main.py -c
+    
+    python3 main.py --countries France,Italy
+    
+    python3 main.py --countries Albania -dr
 </pre>
 
 - Use `--countries` to specify a comma-separated list of countries. If it's missing then by default Germany is taken.
@@ -80,3 +81,21 @@ For more options and details, run:
 </pre>
 
 Generated plots will be saved in the `images` folder.
+
+### Safe skipping countries
+
+In case the script is run about countries/country that either are mistyped or the data is not existing, then they are skipped.
+Example:
+
+<pre>
+    python3 main.py --countries Germ,Italy
+</pre>
+
+Germ will be skipped and as a result the plot will be created only for Italy.
+
+
+## Improvement goals
+
+- Use xserver to run a GUI, not just store images. Able to connect from inside the container to xserver in the local machine, but for some reason the GUI is not activated. Xeyes was able to be run successfully.
+- Getting data is coupled together. We are getting data for confirmed cases, deaths and recoveries, regardless if we need one or all of them. 
+- Another example of possible issue is if we want the plot for the confirmed cases. If the country has data in the time_series_covid19_confirmed_global.csv but not on one of the other csv, then the country is skipped.
