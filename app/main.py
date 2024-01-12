@@ -28,46 +28,55 @@ def parse_arguments() -> argparse:
 
 def get_data_for_country(country: str) -> tuple:
     print('Getting the data for the subplots.')
+
     # Read in the data to a pandas DataFrame.
     cases_data = pd.read_csv(CONFIRMED_CASES_FILE)
     deaths_data = pd.read_csv(DEATHS_FILE)
     recoveries_data = pd.read_csv(RECOVERIES_FILE)
 
-    # Group by country and sum over the different states/regions of each country.
-    cases_grouped_by_country = cases_data.groupby('Country/Region')
-    cases_data_frame_by_country = cases_grouped_by_country.sum()
-    # Extract the Series corresponding to the case numbers for the country.
-    cases_by_location = cases_data_frame_by_country.loc[country, cases_data_frame_by_country.columns[3:]]
+    try:
+        # Group by country and sum over the different states/regions of each country.
+        cases_grouped_by_country = cases_data.groupby('Country/Region')
+        cases_data_frame_by_country = cases_grouped_by_country.sum()
+        # Extract the Series corresponding to the case numbers for the country.
+        cases_by_location = cases_data_frame_by_country.loc[country, cases_data_frame_by_country.columns[3:]]
 
-    # Group by country and sum over the different states/regions of each country.
-    deaths_grouped_by_country = deaths_data.groupby('Country/Region')
-    deaths_data_frame_by_country = deaths_grouped_by_country.sum()
-    # Extract the Series corresponding to the case numbers for the country.
-    deaths_by_location = deaths_data_frame_by_country.loc[country, deaths_data_frame_by_country.columns[3:]]
+        # Group by country and sum over the different states/regions of each country.
+        deaths_grouped_by_country = deaths_data.groupby('Country/Region')
+        deaths_data_frame_by_country = deaths_grouped_by_country.sum()
+        # Extract the Series corresponding to the case numbers for the country.
+        deaths_by_location = deaths_data_frame_by_country.loc[country, deaths_data_frame_by_country.columns[3:]]
 
-    # Group by country and sum over the different states/regions of each country.
-    recoveries_grouped_by_country = recoveries_data.groupby('Country/Region')
-    recoveries_data_frame_by_country = recoveries_grouped_by_country.sum()
-    # Extract the Series corresponding to the case numbers for the country.
-    recoveries_by_location = recoveries_data_frame_by_country.loc[country, recoveries_data_frame_by_country.columns[3:550]]
+        # Group by country and sum over the different states/regions of each country.
+        recoveries_grouped_by_country = recoveries_data.groupby('Country/Region')
+        recoveries_data_frame_by_country = recoveries_grouped_by_country.sum()
+        # Extract the Series corresponding to the case numbers for the country.
+        recoveries_by_location = recoveries_data_frame_by_country.loc[
+            country, recoveries_data_frame_by_country.columns[3:550]]
+    except Exception:
+        print(f"There is no available data for the country {country}")
+        raise
 
     return cases_by_location, deaths_by_location, recoveries_by_location
 
 
-def make_confirmed_cases_subplots(daily_confirmed_cases_plot: axes, total_confirmed_cases_plot: axes, cases_by_location: series) -> None:
+def make_confirmed_cases_subplots(daily_confirmed_cases_plot: axes, total_confirmed_cases_plot: axes,
+                                  cases_by_location: series) -> None:
     print('Generating subplots for confirmed cases.')
 
     # Plot 1: Daily confirmed cases.
     cases_by_location.index = pd.to_datetime(cases_by_location.index, format=DATE_FORMAT, errors='coerce')
     new_daily_confirmed_cases = cases_by_location.diff().fillna(0).clip(lower=0)  # Set negative values to zero
 
-    daily_confirmed_cases_plot.bar(cases_by_location.index, new_daily_confirmed_cases.values, label='Daily Confirmed Cases', color='purple')
+    daily_confirmed_cases_plot.bar(cases_by_location.index, new_daily_confirmed_cases.values,
+                                   label='Daily Confirmed Cases', color='purple')
     daily_confirmed_cases_plot.set_ylabel('Daily Confirmed Cases')
     daily_confirmed_cases_plot.legend()
     daily_confirmed_cases_plot.ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
 
     # Plot 2: Total confirmed cases.
-    total_confirmed_cases_plot.plot(cases_by_location.index, cases_by_location.values, label='Total Confirmed Cases', color='blue')
+    total_confirmed_cases_plot.plot(cases_by_location.index, cases_by_location.values, label='Total Confirmed Cases',
+                                    color='blue')
     total_confirmed_cases_plot.set_ylabel('Confirmed cases, $N$')
     total_confirmed_cases_plot.legend()
     total_confirmed_cases_plot.ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
@@ -100,20 +109,23 @@ def make_deaths_subplots(daily_deaths_plot: axes, total_deaths_plot: axes, death
     total_deaths_plot.xaxis.set_major_locator(plt.MultipleLocator(180))
 
 
-def make_recoveries_subplots(daily_recoveries_plot: axes, total_recoveries_plot: axes, recoveries_by_location: series) -> None:
+def make_recoveries_subplots(daily_recoveries_plot: axes, total_recoveries_plot: axes,
+                             recoveries_by_location: series) -> None:
     print('Generating subplots for recoveries cases.')
 
     # Plot 5: Daily recoveries.
     recoveries_by_location.index = pd.to_datetime(recoveries_by_location.index, format=DATE_FORMAT, errors='coerce')
     new_daily_recoveries = recoveries_by_location.diff().fillna(0).clip(lower=0)  # Set negative values to zero
 
-    daily_recoveries_plot.bar(recoveries_by_location.index, new_daily_recoveries.values, label='Daily Recoveries', color='green')
+    daily_recoveries_plot.bar(recoveries_by_location.index, new_daily_recoveries.values, label='Daily Recoveries',
+                              color='green')
     daily_recoveries_plot.set_ylabel('Daily Recoveries')
     daily_recoveries_plot.legend()
     daily_recoveries_plot.ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
 
     # Plot 6: Total recoveries.
-    total_recoveries_plot.plot(recoveries_by_location.index, recoveries_by_location.values, label='Total Recoveries', color='cyan')
+    total_recoveries_plot.plot(recoveries_by_location.index, recoveries_by_location.values, label='Total Recoveries',
+                               color='cyan')
     total_recoveries_plot.set_ylabel('Total Recoveries')
     total_recoveries_plot.legend()
     total_recoveries_plot.ticklabel_format(style='plain', axis='y')  # Disable scientific notation.
@@ -197,6 +209,9 @@ if __name__ == "__main__":
 
     countries = args.countries.split(',')
     for country in countries:
-        generate_plot(country, args.c, args.d, args.r)
+        try:
+            generate_plot(country, args.c, args.d, args.r)
 
-        store_plot_to_storage(country, args.c, args.d, args.r)
+            store_plot_to_storage(country, args.c, args.d, args.r)
+        except Exception as exception:
+            print('Error encountered:', exception)
