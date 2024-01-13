@@ -19,6 +19,8 @@
     └── run.sh
 </pre>
 
+- A strongly typed python has been used for the project
+
 ## Setup Instructions
 
 ### 1\. Clone the Repository
@@ -96,6 +98,6 @@ Germ will be skipped and as a result the plot will be created only for Italy.
 
 ## Improvement goals
 
-- Use xserver to run a GUI, not just store images. Able to connect from inside the container to xserver in the local machine, but for some reason the GUI is not activated. Xeyes was able to be run successfully.
+- Use xserver to run a GUI, not just store images. Able to connect from inside the container to xserver in the local machine, but for some reason the GUI is not activated. Xeyes was able to run successfully.
 - Getting data is coupled together. We are getting data for confirmed cases, deaths and recoveries, regardless if we need one or all of them. 
 - Another example of possible issue is if we want the plot for the confirmed cases. If the country has data in the time_series_covid19_confirmed_global.csv but not on one of the other csv, then the country is skipped.
